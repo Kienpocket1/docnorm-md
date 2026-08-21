@@ -1,0 +1,38 @@
+[build-system]
+requires = ["setuptools>=75", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "rag-pipeline-v2"
+version = "0.1.0"
+description = "Local document preparation pipeline for internal RAG"
+requires-python = ">=3.12,<3.13"
+
+dependencies = [
+    "pydantic>=2,<3",
+    "pydantic-settings",
+    "typer",
+    "rich",
+    "PyYAML",
+    "orjson",
+    "python-docx",
+    "PyMuPDF",
+    "rapidfuzz"
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest",
+    "pytest-cov"
+]
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]
+addopts = "-q"

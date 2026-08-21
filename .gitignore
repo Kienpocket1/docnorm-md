@@ -1,0 +1,54 @@
+# Python caches and build output
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.coverage
+htmlcov/
+build/
+dist/
+
+# Virtual environments and local configuration
+venv*/
+.venv/
+.env
+.env.*
+!.env.example
+local_config.json
+
+# Local models, documents, and generated runs
+model_cache/
+data_local/
+docnorm_runs/
+pipeline_v2_output/
+mineru_output/
+legacy_artifacts/
+runs/
+*_output/
+
+# Large model artifacts
+*.bin
+*.onnx
+*.pt
+*.pth
+*.safetensors
+
+# Internal documents, archives, and logs
+*.pdf
+*.docx
+*.xlsx
+*.zip
+*.log
+*_diagnostic.txt
+
+# Stage delivery packages are historical duplicates
+pipeline_v2_stage_*/
+deliverable_stage_*/
+
+# IDE and operating-system files
+.vscode/
+.idea/
+Thumbs.db
+.DS_Store

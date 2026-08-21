@@ -1,0 +1,163 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="DocNorm MD - chuẩn hóa PDF và DOCX sang Markdown trên máy cục bộ">
+  <title>DocNorm MD · PDF/DOCX sang Markdown</title>
+  <link rel="stylesheet" href="/static/app.css">
+</head>
+<body data-max-upload-bytes="{{ max_upload_mb * 1024 * 1024 }}">
+  <header class="app-header">
+    <div class="shell header-inner">
+      <a class="brand" href="/" aria-label="Trang chủ DocNorm MD">
+        <span class="brand-mark" aria-hidden="true">D</span>
+        <span><strong>DocNorm MD</strong><small>Chuẩn hóa tài liệu sang Markdown</small></span>
+      </a>
+      <div class="header-actions">
+        <span class="privacy-pill"><span class="status-dot"></span>Xử lý cục bộ</span>
+        <span id="engineStatus" class="engine-pill">Đang kiểm tra engine…</span>
+      </div>
+    </div>
+  </header>
+
+  <main class="shell">
+    <section class="hero">
+      <div>
+        <p class="eyebrow">DOCUMENT NORMALIZATION WORKBENCH</p>
+        <h1>Biến tài liệu thô thành Markdown sạch, có thể kiểm chứng.</h1>
+        <p class="hero-copy">Trích xuất cấu trúc, kiểm tra chất lượng, xem trước và tải kết quả — dữ liệu không rời khỏi máy của bạn.</p>
+      </div>
+      <div class="format-badges" aria-label="Định dạng được hỗ trợ">
+        <span>PDF</span><span>DOCX</span><span>OCR vi+en</span><span>Math → LaTeX</span><span>GFM</span>
+      </div>
+    </section>
+
+    <section class="panel upload-panel" aria-labelledby="uploadTitle">
+      <div class="panel-heading">
+        <div><span class="step-number">01</span><h2 id="uploadTitle">Chọn tài liệu</h2></div>
+        <p>Tối đa {{ max_upload_mb }} MB · Chỉ PDF hoặc DOCX</p>
+      </div>
+      <form id="uploadForm">
+        <label id="dropzone" class="dropzone" for="fileInput">
+          <input id="fileInput" type="file" accept=".pdf,.docx,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document" hidden>
+          <span class="upload-icon" aria-hidden="true">⇧</span>
+          <strong>Kéo thả PDF hoặc DOCX vào đây</strong>
+          <span>hoặc <u>chọn tệp từ máy</u></span>
+        </label>
+        <div id="selectedFile" class="selected-file is-hidden" aria-live="polite">
+          <span class="file-icon">MD</span>
+          <span class="file-meta"><strong id="fileName"></strong><small id="fileInfo"></small></span>
+          <button id="removeFile" class="icon-button" type="button" aria-label="Bỏ tệp">×</button>
+        </div>
+
+        <fieldset class="mode-fieldset">
+          <legend>Chế độ xử lý</legend>
+          <div class="mode-grid">
+            <label class="mode-card selected">
+              <input type="radio" name="mode" value="auto" checked>
+              <span><strong>Tự động <em>Khuyến nghị</em></strong><small>Tự nhận diện scan; Geometry OCR vi+en giữ đúng thứ tự tọa độ.</small></span>
+            </label>
+            <label class="mode-card">
+              <input type="radio" name="mode" value="structure">
+              <span><strong>Giữ cấu trúc</strong><small>Bắt buộc pipeline; scan tự dựng lại bảng có đường kẻ.</small></span>
+            </label>
+            <label class="mode-card">
+              <input type="radio" name="mode" value="fast">
+              <span><strong>Nhanh</strong><small>Text/DOCX đi đường native; scan dùng một lượt Geometry OCR.</small></span>
+            </label>
+          </div>
+        </fieldset>
+        <div class="profile-control">
+          <label for="repairProfile">
+            <strong>Profile sửa cấu trúc</strong>
+            <small>Đề toán chỉ gọi Qwen cho trang rủi ro; lặp/mất câu sẽ bị chặn trước khi xuất.</small>
+          </label>
+          <select id="repairProfile" name="repair_profile">
+            <option value="auto" selected>Tự nhận diện an toàn (khuyến nghị)</option>
+            <option value="generic">Chỉ chuẩn hóa tổng quát</option>
+            <option value="math_exam">Đề toán / ma trận / đáp án hai cột</option>
+            <option value="petrolimex_materials">Quy trình quản lý vật tư Petrolimex</option>
+          </select>
+        </div>
+        <div class="form-footer">
+          <p><span class="lock-icon">●</span> OCR chạy localhost · Không chunking · Không embedding</p>
+          <button id="startButton" class="button primary" type="submit" disabled>Bắt đầu chuẩn hóa <span>→</span></button>
+        </div>
+      </form>
+    </section>
+
+    <section id="progressPanel" class="panel progress-panel is-hidden" aria-live="polite">
+      <div class="panel-heading">
+        <div><span class="step-number">02</span><h2>Tiến trình</h2></div>
+        <strong id="progressPercent">0%</strong>
+      </div>
+      <div class="progress-track"><span id="progressBar"></span></div>
+      <ol id="stageList" class="stages">
+        <li data-stage="UPLOAD"><span>1</span><b>Tải lên</b></li>
+        <li data-stage="EXTRACT"><span>2</span><b>Trích xuất</b></li>
+        <li data-stage="VERIFY"><span>3</span><b>Kiểm tra</b></li>
+        <li data-stage="NORMALIZE"><span>4</span><b>Chuẩn hóa</b></li>
+        <li data-stage="DONE"><span>5</span><b>Hoàn tất</b></li>
+      </ol>
+      <div class="progress-message"><span class="spinner"></span><span id="progressMessage">Đang chuẩn bị…</span><small id="elapsedTime"></small></div>
+    </section>
+
+    <section id="resultPanel" class="result-area is-hidden" aria-labelledby="resultTitle">
+      <div class="result-heading">
+        <div><p class="eyebrow">KẾT QUẢ</p><h2 id="resultTitle">Markdown đã sẵn sàng</h2></div>
+        <span id="qualityBadge" class="quality-badge">PASS</span>
+      </div>
+      <div class="metric-grid">
+        <article><span>Trang</span><strong id="metricPages">—</strong></article>
+        <article><span>Element</span><strong id="metricElements">0</strong></article>
+        <article><span>Bảng</span><strong id="metricTables">0</strong></article>
+        <article><span>Ảnh</span><strong id="metricImages">0</strong></article>
+        <article><span>Độ phủ nguồn</span><strong id="metricCoverage">0%</strong></article>
+        <article><span>Ký tự hỏng</span><strong id="metricBroken">0</strong></article>
+        <article><span>Trang VLM đọc lại</span><strong id="metricVlmPages">0</strong></article>
+      </div>
+
+      <div class="workbench-grid">
+        <article class="panel editor-panel">
+          <div class="editor-toolbar">
+            <div class="toggle-group">
+              <button id="sourceTab" class="active" type="button">Markdown</button>
+              <button id="previewTab" type="button">Xem an toàn</button>
+            </div>
+            <div class="editor-actions"><span id="editorMeta"></span><span id="dirtyDot" class="dirty-dot is-hidden">Chưa lưu</span><button id="saveMarkdown" class="button secondary" type="button" disabled>Lưu chỉnh sửa</button></div>
+          </div>
+          <textarea id="markdownEditor" spellcheck="false" aria-label="Nội dung Markdown"></textarea>
+          <pre id="markdownPreview" class="safe-preview is-hidden" tabindex="0"></pre>
+        </article>
+
+        <aside class="side-column">
+          <article class="panel quality-panel">
+            <div class="side-heading"><h3>Báo cáo chất lượng</h3><span id="issueCount">0 vấn đề</span></div>
+            <div class="coverage-row"><span>Provenance</span><strong id="coverageLabel">0%</strong></div>
+            <div class="mini-progress"><span id="coverageBar"></span></div>
+            <p class="engine-chain"><span>Engine</span><strong id="engineChain">—</strong></p>
+            <p class="engine-chain"><span>Profile sửa cấu trúc</span><strong id="repairProfileApplied">GENERIC</strong></p>
+            <ul id="issueList" class="issue-list"></ul>
+          </article>
+          <article class="panel download-panel">
+            <h3>Tải kết quả</h3>
+            <a id="downloadMarkdown" class="button primary full" href="#">Tải Markdown <span>↓</span></a>
+            <a id="downloadBundle" class="button secondary full" href="#">Tải gói kết quả ZIP</a>
+            <a id="downloadReport" class="text-link" href="#">Tải báo cáo JSON</a>
+          </article>
+        </aside>
+      </div>
+    </section>
+
+    <section class="history-section" aria-labelledby="historyTitle">
+      <div class="history-heading"><div><p class="eyebrow">LỊCH SỬ CỤC BỘ</p><h2 id="historyTitle">Các lần xử lý gần đây</h2></div><button id="refreshHistory" class="button ghost" type="button">Làm mới</button></div>
+      <div id="historyList" class="history-list"><p class="empty-state">Chưa có tài liệu nào được xử lý.</p></div>
+    </section>
+  </main>
+
+  <footer><div class="shell"><span>DocNorm MD · PDF/DOCX → Markdown</span><span>Dữ liệu không rời khỏi máy của bạn</span></div></footer>
+  <div id="toast" class="toast is-hidden" role="status" aria-live="polite"></div>
+  <script src="/static/app.js" defer></script>
+</body>
+</html>

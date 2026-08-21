@@ -1,0 +1,27 @@
+name: tests
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - name: Install packages
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -e "./pipeline_v2[dev]"
+          python -m pip install -e "./DocNorm_MD_Web_v1_4[dev]"
+      - name: Compile source
+        run: |
+          python -m compileall -q pipeline_v2/src DocNorm_MD_Web_v1_4/docnorm_web
+      - name: Test pipeline
+        run: python -m pytest -q pipeline_v2/tests
+      - name: Test web
+        run: python -m pytest -q DocNorm_MD_Web_v1_4/tests

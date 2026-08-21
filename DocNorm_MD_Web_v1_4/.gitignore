@@ -1,0 +1,7 @@
+venv_docnorm_web/
+runs/
+*.pyc
+__pycache__/
+.pytest_cache/
+.env
+local_config.json
