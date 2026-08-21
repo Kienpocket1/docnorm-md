@@ -78,20 +78,7 @@ chạy khi không có GPU/model.
 Chi tiết đối chiếu các stage và kết quả test nằm tại
 [`docs/PIPELINE_AUDIT.md`](docs/PIPELINE_AUDIT.md).
 
-## Đưa lên GitHub
 
-Nên tạo repository **Private** nếu tài liệu hoặc quy tắc nghiệp vụ thuộc phạm
-vi thực tập của doanh nghiệp. Sau khi giải nén bản bàn giao, mở PowerShell ngay
-tại thư mục này và chạy:
-
-```powershell
-powershell.exe -NoProfile -ExecutionPolicy Bypass -File ".\verify_repository.ps1"
-git init
-git branch -M main
-git add .
-git commit -m "Initial DocNorm MD submission"
-git remote add origin https://github.com/<tai-khoan>/<repository>.git
-git push -u origin main
 ```
 
 Thay `<tai-khoan>/<repository>` bằng repository do bạn tạo trên GitHub. Không
